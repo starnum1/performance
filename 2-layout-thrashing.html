@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>问题2: 强制同步布局（Layout Thrashing）</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    button { padding: 10px 20px; margin: 10px; font-size: 16px; }
+    .item { padding: 10px; margin: 5px; background: #e74c3c; color: white; }
+  </style>
+</head>
+<body>
+  <h1>问题2: 强制同步布局（Layout Thrashing）</h1>
+  <p>观察两种方式的性能差异</p>
+  
+  <button id="badBtn">坏方式：读写交替</button>
+  <button id="goodBtn">好方式：批量读写</button>
+  <button id="clearBtn">清空</button>
+  
+  <div id="container"></div>
+  <div id="output"></div>
+
+  <script>
+    const container = document.getElementById('container');
+    const output = document.getElementById('output');
+
+    // 创建测试元素
+    function createItems() {
+      container.innerHTML = '';
+      for (let i = 0; i < 100; i++) {
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.textContent = `Item ${i + 1}`;
+        container.appendChild(div);
+      }
+    }
+
+    // 坏示例：读写交替，导致强制同步布局
+    document.getElementById('badBtn').addEventListener('click', function() {
+      createItems();
+      output.innerHTML = '执行中...<br>';
+      const start = performance.now();
+      
+      const items = document.querySelectorAll('.item');
+      items.forEach(item => {
+        // 读取布局属性
+        const width = item.offsetWidth;
+        // 立即修改样式
+        item.style.width = (width * 1.1) + 'px';
+        // 再次读取 - 强制浏览器重新计算布局！
+        const height = item.offsetHeight;
+        item.style.height = (height * 1.1) + 'px';
+      });
+      
+      const time = (performance.now() - start).toFixed(2);
+      output.innerHTML += `完成！耗时: ${time}ms<br>`;
+      output.innerHTML += '<span style="color: red;">每次读写都触发布局计算！</span>';
+    });
+
+    // 好示例：先读后写，批量操作
+    document.getElementById('goodBtn').addEventListener('click', function() {
+      createItems();
+      output.innerHTML = '执行中...<br>';
+      const start = performance.now();
+      
+      const items = document.querySelectorAll('.item');
+      
+      // 第一步：批量读取
+      const dimensions = Array.from(items).map(item => ({
+        width: item.offsetWidth,
+        height: item.offsetHeight
+      }));
+      
+      // 第二步：批量写入
+      items.forEach((item, index) => {
+        item.style.width = (dimensions[index].width * 1.1) + 'px';
+        item.style.height = (dimensions[index].height * 1.1) + 'px';
+      });
+      
+      const time = (performance.now() - start).toFixed(2);
+      output.innerHTML += `完成！耗时: ${time}ms<br>`;
+      output.innerHTML += '<span style="color: green;">只触发一次布局计算！</span>';
+    });
+
+    document.getElementById('clearBtn').addEventListener('click', function() {
+      container.innerHTML = '';
+      output.innerHTML = '';
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>问题5: 滚动性能问题</title>
+  <style>
+    body { font-family: Arial; padding: 20px; margin: 0; }
+    .header { position: fixed; top: 0; left: 0; right: 0; background: white; padding: 10px; border-bottom: 2px solid #ccc; z-index: 100; }
+    .content { margin-top: 120px; }
+    button { padding: 10px 20px; margin: 5px; font-size: 16px; }
+    .scroll-container { height: 300px; overflow-y: scroll; border: 2px solid #3498db; margin: 10px 0; }
+    .scroll-item { padding: 20px; border-bottom: 1px solid #eee; }
+    #output { position: fixed; bottom: 10px; right: 10px; background: rgba(0,0,0,0.8); color: white; padding: 10px; border-radius: 5px; max-width: 300px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>问题5: 滚动性能问题</h1>
+    <button id="badBtn">坏方式：频繁触发</button>
+    <button id="goodBtn">好方式：节流</button>
+  </div>
+
+  <div class="content">
+    <div id="container" class="scroll-container"></div>
+  </div>
+
+  <div id="output">滚动试试...</div>
+
+  <script>
+    const container = document.getElementById('container');
+    const output = document.getElementById('output');
+    let scrollCount = 0;
+    let currentListener = null;
+
+    // 创建大量内容
+    function createContent() {
+      container.innerHTML = '';
+      for (let i = 0; i < 100; i++) {
+        const div = document.createElement('div');
+        div.className = 'scroll-item';
+        div.textContent = `Item ${i + 1} - Scroll to see performance difference`;
+        container.appendChild(div);
+      }
+    }
+
+    // 移除旧监听器
+    function removeListener() {
+      if (currentListener) {
+        container.removeEventListener('scroll', currentListener);
+        currentListener = null;
+      }
+      scrollCount = 0;
+    }
+
+    // 坏示例：每次滚动都执行复杂操作
+    document.getElementById('badBtn').addEventListener('click', function() {
+      createContent();
+      removeListener();
+      output.innerHTML = '坏方式已启用<br>滚动次数: 0';
+      
+      currentListener = function() {
+        scrollCount++;
+        
+        // 模拟复杂计算
+        let sum = 0;
+        for (let i = 0; i < 100000; i++) {
+          sum += Math.sqrt(i);
+        }
+        
+        // 读取布局属性（触发重排）
+        const scrollTop = container.scrollTop;
+        const height = container.offsetHeight;
+        
+        output.innerHTML = `<span style="color: red;">坏方式</span><br>滚动次数: ${scrollCount}<br>位置: ${scrollTop.toFixed(0)}px<br>计算: ${sum.toFixed(0)}<br><span style="color: red;">每次滚动都执行！</span>`;
+      };
+      
+      container.addEventListener('scroll', currentListener);
+    });
+
+    // 好示例：使用节流
+    document.getElementById('goodBtn').addEventListener('click', function() {
+      createContent();
+      removeListener();
+      output.innerHTML = '好方式已启用（节流）<br>滚动次数: 0';
+      
+      let throttleTimer = null;
+      currentListener = function() {
+        scrollCount++;
+        
+        if (throttleTimer) return;
+        
+        throttleTimer = setTimeout(() => {
+          // 模拟复杂计算
+          let sum = 0;
+          for (let i = 0; i < 100000; i++) {
+            sum += Math.sqrt(i);
+          }
+          
+          const scrollTop = container.scrollTop;
+          
+          output.innerHTML = `<span style="color: orange;">好方式（节流）</span><br>滚动次数: ${scrollCount}<br>位置: ${scrollTop.toFixed(0)}px<br>计算: ${sum.toFixed(0)}<br><span style="color: orange;">每100ms执行一次</span>`;
+          
+          throttleTimer = null;
+        }, 100);
+      };
+      
+      container.addEventListener('scroll', currentListener);
+    });
+
+    // 默认启动好方式
+    document.getElementById('betterBtn').click();
+  </script>
+</body>
+</html>

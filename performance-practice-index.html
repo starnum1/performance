@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Performance 性能分析练习</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    h1 { color: #2c3e50; }
+    .intro {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .problems {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    .card h3 {
+      margin-top: 0;
+      color: #3498db;
+    }
+    .card a {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 8px 16px;
+      background: #3498db;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+    }
+    .card a:hover {
+      background: #2980b9;
+    }
+    .tips {
+      background: #fff3cd;
+      padding: 15px;
+      border-left: 4px solid #ffc107;
+      margin: 20px 0;
+    }
+    code {
+      background: #f4f4f4;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🚀 Performance 性能分析练习</h1>
+  
+  <div class="intro">
+    <h2>如何使用这些示例</h2>
+    <ol>
+      <li>打开 Chrome DevTools (F12)</li>
+      <li>切换到 <code>Performance</code> 面板</li>
+      <li>点击录制按钮 ⏺️</li>
+      <li>在页面上操作（点击按钮等）</li>
+      <li>停止录制，分析结果</li>
+    </ol>
+  </div>
+
+  <h2>常见性能问题示例</h2>
+  <div class="problems">
+    <div class="card">
+      <h3>问题1: 长任务阻塞</h3>
+      <p>长时间运行的 JavaScript 会阻塞主线程，导致页面卡顿。</p>
+      <p><strong>关键词：</strong>Long Task, 主线程阻塞</p>
+      <a href="1-long-task.html">打开示例</a>
+    </div>
+
+    <div class="card">
+      <h3>问题2: 强制同步布局</h3>
+      <p>读写 DOM 交替操作会导致浏览器反复计算布局。</p>
+      <p><strong>关键词：</strong>Layout Thrashing, Forced Reflow</p>
+      <a href="2-layout-thrashing.html">打开示例</a>
+    </div>
+
+    <div class="card">
+      <h3>问题3: 内存泄漏</h3>
+      <p>未清理的事件监听器和定时器会导致内存泄漏。</p>
+      <p><strong>关键词：</strong>Memory Leak, Event Listener</p>
+      <a href="3-memory-leak.html">打开示例</a>
+    </div>
+
+    <div class="card">
+      <h3>问题4: 滚动性能</h3>
+      <p>滚动事件触发频繁，需要节流或使用 RAF。</p>
+      <p><strong>关键词：</strong>Scroll, Throttle, RAF</p>
+      <a href="4-scroll-performance.html">打开示例</a>
+    </div>
+
+    <div class="card">
+      <h3>问题5: 绘制性能</h3>
+      <p>使用 transform 代替 top/left 可以避免重排。</p>
+      <p><strong>关键词：</strong>Paint, Composite, GPU</p>
+      <a href="5-paint-performance.html">打开示例</a>
+    </div>
+
+    <!-- <div class="card">
+      <h3>演示: FP/FCP/LCP 分离</h3>
+      <p>演示首次绘制、首次内容、最大内容的时间差异。</p>
+      <p><strong>关键词：</strong>FP, FCP, LCP, Core Web Vitals</p>
+      <a href="6-separated-metrics.html">打开示例</a>
+    </div>
+
+    <div class="card">
+      <h3>演示: 布局偏移 (CLS)</h3>
+      <p>图片、广告、动态内容导致的布局偏移问题及解决方案。</p>
+      <p><strong>关键词：</strong>Layout Shift, CLS, 视觉稳定性</p>
+      <a href="7-layout-shift.html">打开示例</a>
+    </div> -->
+  </div>
+</body>
+</html>

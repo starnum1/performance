@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>问题8: 布局偏移 (Layout Shift / CLS)</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    h1 { color: #2c3e50; }
+
+    .demo-section {
+      margin: 30px 0;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+
+    .demo-section h3 {
+      margin-top: 0;
+      color: #e74c3c;
+    }
+
+    button {
+      padding: 10px 20px;
+      margin: 10px 5px;
+      font-size: 16px;
+      cursor: pointer;
+      background: #3498db;
+      color: white;
+      border: none;
+      border-radius: 4px;
+    }
+
+    button:hover {
+      background: #2980b9;
+    }
+
+    .good-example {
+      border-left: 4px solid #27ae60;
+    }
+
+    .good-example h3 {
+      color: #27ae60;
+    }
+
+    .content {
+      background: white;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 4px;
+      line-height: 1.6;
+    }
+
+    /* 坏示例：没有预留空间的图片 */
+    .bad-image {
+      width: 100%;
+      height: auto;
+    }
+
+    /* 好示例：使用 aspect-ratio 预留空间 */
+    .good-image-container {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #e0e0e0;
+      position: relative;
+    }
+
+    .good-image-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    /* 动态插入的广告 */
+    .ad-banner {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+      padding: 30px;
+      text-align: center;
+      margin: 15px 0;
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    /* 预留广告位 */
+    .ad-placeholder {
+      min-height: 100px;
+      background: #f0f0f0;
+      border: 2px dashed #ccc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #999;
+      margin: 15px 0;
+      border-radius: 8px;
+    }
+
+    .metrics {
+      background: #fff3cd;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 8px;
+      border-left: 4px solid #ffc107;
+    }
+
+    .shift-indicator {
+      background: #ffe6e6;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 4px;
+      color: #c0392b;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>问题8: 布局偏移 (Layout Shift / CLS)</h1>
+
+  <div class="metrics">
+    <h3>📊 什么是 CLS (Cumulative Layout Shift)?</h3>
+    <p><strong>累积布局偏移</strong> - 衡量页面视觉稳定性的指标</p>
+    <ul>
+      <li><strong>良好：</strong> CLS < 0.1</li>
+      <li><strong>需要改进：</strong> 0.1 ≤ CLS ≤ 0.25</li>
+      <li><strong>差：</strong> CLS > 0.25</li>
+    </ul>
+    <p><strong>如何观察：</strong>打开 DevTools Performance 面板，录制后查看 "Layout Shifts" 泳道</p>
+  </div>
+
+  <!-- 问题1: 没有尺寸的图片 -->
+  <div class="demo-section">
+    <h3>❌ 问题1: 图片没有预留空间</h3>
+    <p>图片加载前没有占位，加载后会把下面的内容挤下去</p>
+    <button onclick="loadBadImage()">加载图片（会导致布局偏移）</button>
+    <button onclick="resetBadImage()">重置</button>
+    
+    <div id="badImageContainer"></div>
+    
+    <div class="content">
+      <p>👆 点击按钮后，这段文字会被突然出现的图片挤下去！</p>
+      <p>这就是典型的布局偏移，用户体验很差。</p>
+    </div>
+  </div>
+
+  <!-- 解决方案1 -->
+  <div class="demo-section good-example">
+    <h3>✅ 解决方案1: 使用 aspect-ratio 预留空间</h3>
+    <p>提前预留图片空间，避免加载后的布局偏移</p>
+    <button onclick="loadGoodImage()">加载图片（无布局偏移）</button>
+    <button onclick="resetGoodImage()">重置</button>
+    
+    <div id="goodImageContainer"></div>
+    
+    <div class="content">
+      <p>👆 这段文字不会被挤下去，因为图片空间已经预留好了！</p>
+    </div>
+  </div>
+
+  <!-- 问题2: 动态插入的内容 -->
+  <div class="demo-section">
+    <h3>❌ 问题2: 动态插入广告/内容</h3>
+    <p>在现有内容上方突然插入广告或通知</p>
+    <button onclick="insertAd()">插入广告（会导致布局偏移）</button>
+    <button onclick="resetAd()">重置</button>
+    
+    <div id="adContainer"></div>
+    
+    <div class="content">
+      <p>👆 点击按钮后，广告会突然出现，把这段文字挤下去！</p>
+      <p>这是网页中最常见的布局偏移问题之一。</p>
+    </div>
+  </div>
+
+  <!-- 解决方案2 -->
+  <div class="demo-section good-example">
+    <h3>✅ 解决方案2: 预留广告位</h3>
+    <p>提前预留广告空间，或者在底部插入</p>
+    <button onclick="insertAdGood()">插入广告（无布局偏移）</button>
+    <button onclick="resetAdGood()">重置</button>
+    
+    <div id="adContainerGood">
+      <div class="ad-placeholder">广告位预留</div>
+    </div>
+    
+    <div class="content">
+      <p>👆 这段文字不会移动，因为广告位已经预留好了！</p>
+    </div>
+  </div>
+
+  <!-- 问题3: Web Fonts 导致的偏移 -->
+  <div class="demo-section">
+    <h3>❌ 问题3: Web Fonts 加载导致文字跳动</h3>
+    <p>自定义字体加载后，文字大小变化导致布局偏移</p>
+    <button onclick="loadWebFont()">加载自定义字体（会导致偏移）</button>
+    <button onclick="resetWebFont()">重置</button>
+    
+    <div id="fontContainer" style="font-size: 24px; line-height: 1.5;">
+      <p>这是一段使用自定义字体的文字。加载前后字体大小可能不同。</p>
+    </div>
+    
+    <div class="content">
+      <p>👆 字体加载后，文字高度变化会影响下方内容位置</p>
+    </div>
+  </div>
+
+  <!-- 问题4: 没有高度的容器 -->
+  <div class="demo-section">
+    <h3>❌ 问题4: 动态内容没有最小高度</h3>
+    <p>异步加载的内容没有预留空间</p>
+    <button onclick="loadDynamicContent()">加载内容（会导致偏移）</button>
+    <button onclick="resetDynamicContent()">重置</button>
+    
+    <div id="dynamicContainer" style="background: #e8f5e9; padding: 10px; border-radius: 4px;"></div>
+    
+    <div class="content">
+      <p>👆 动态内容加载后会把这段文字挤下去</p>
+    </div>
+  </div>
+
+  <!-- 解决方案4 -->
+  <div class="demo-section good-example">
+    <h3>✅ 解决方案4: 设置最小高度或骨架屏</h3>
+    <p>为动态内容设置 min-height 或使用骨架屏</p>
+    <button onclick="loadDynamicContentGood()">加载内容（无偏移）</button>
+    <button onclick="resetDynamicContentGood()">重置</button>
+    
+    <div id="dynamicContainerGood" style="background: #e8f5e9; padding: 10px; border-radius: 4px; min-height: 100px; display: flex; align-items: center; justify-content: center; color: #999;">
+      加载中...
+    </div>
+    
+    <div class="content">
+      <p>👆 这段文字不会移动，因为容器有最小高度</p>
+    </div>
+  </div>
+
+  <div class="metrics">
+    <h3>🔧 防止布局偏移的最佳实践</h3>
+    <ol>
+      <li><strong>图片/视频：</strong>始终设置 width 和 height 属性，或使用 aspect-ratio</li>
+      <li><strong>广告/嵌入内容：</strong>预留固定空间，避免在现有内容上方插入</li>
+      <li><strong>Web Fonts：</strong>使用 font-display: optional 或 font-display: swap</li>
+      <li><strong>动态内容：</strong>设置 min-height 或使用骨架屏</li>
+      <li><strong>动画：</strong>使用 transform 而不是改变 top/left/width/height</li>
+    </ol>
+  </div>
+
+  <script>
+    // 问题1: 没有尺寸的图片
+    function loadBadImage() {
+      const container = document.getElementById('badImageContainer');
+      container.innerHTML = '<img src="https://picsum.photos/800/450?random=' + Date.now() + '" class="bad-image" alt="示例图片">';
+    }
+
+    function resetBadImage() {
+      document.getElementById('badImageContainer').innerHTML = '';
+    }
+
+    // 解决方案1: 预留空间的图片
+    function loadGoodImage() {
+      const container = document.getElementById('goodImageContainer');
+      container.innerHTML = `
+        <div class="good-image-container">
+          <img src="https://picsum.photos/800/450?random=${Date.now()}" alt="示例图片">
+        </div>
+      `;
+    }
+
+    function resetGoodImage() {
+      document.getElementById('goodImageContainer').innerHTML = '';
+    }
+
+    // 问题2: 动态插入广告
+    function insertAd() {
+      const container = document.getElementById('adContainer');
+      container.innerHTML = '<div class="ad-banner">🎉 限时优惠！立即购买享受8折优惠！</div>';
+    }
+
+    function resetAd() {
+      document.getElementById('adContainer').innerHTML = '';
+    }
+
+    // 解决方案2: 预留广告位
+    function insertAdGood() {
+      const container = document.getElementById('adContainerGood');
+      container.innerHTML = '<div class="ad-banner">🎉 限时优惠！立即购买享受8折优惠！</div>';
+    }
+
+    function resetAdGood() {
+      document.getElementById('adContainerGood').innerHTML = '<div class="ad-placeholder">广告位预留</div>';
+    }
+
+    // 问题3: Web Fonts
+    function loadWebFont() {
+      const container = document.getElementById('fontContainer');
+      container.style.fontFamily = 'Georgia, serif';
+      container.style.fontSize = '28px';
+    }
+
+    function resetWebFont() {
+      const container = document.getElementById('fontContainer');
+      container.style.fontFamily = 'Arial, sans-serif';
+      container.style.fontSize = '24px';
+    }
+
+    // 问题4: 动态内容
+    function loadDynamicContent() {
+      const container = document.getElementById('dynamicContainer');
+      container.innerHTML = `
+        <h4>动态加载的内容</h4>
+        <p>这是一段异步加载的内容，包含多行文字。</p>
+        <p>由于没有预留空间，加载后会导致下方内容移动。</p>
+      `;
+    }
+
+    function resetDynamicContent() {
+      document.getElementById('dynamicContainer').innerHTML = '';
+    }
+
+    // 解决方案4: 有最小高度的动态内容
+    function loadDynamicContentGood() {
+      const container = document.getElementById('dynamicContainerGood');
+      container.innerHTML = `
+        <div>
+          <h4 style="margin-top: 0;">动态加载的内容</h4>
+          <p>这是一段异步加载的内容，包含多行文字。</p>
+          <p style="margin-bottom: 0;">由于预留了最小高度，加载后不会导致布局偏移。</p>
+        </div>
+      `;
+      container.style.justifyContent = 'flex-start';
+      container.style.color = 'inherit';
+    }
+
+    function resetDynamicContentGood() {
+      const container = document.getElementById('dynamicContainerGood');
+      container.innerHTML = '加载中...';
+      container.style.justifyContent = 'center';
+      container.style.color = '#999';
+    }
+
+    // 监测布局偏移
+    if ('PerformanceObserver' in window) {
+      let clsScore = 0;
+      
+      const observer = new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          if (!entry.hadRecentInput) {
+            clsScore += entry.value;
+            console.log('布局偏移检测:', {
+              value: entry.value,
+              累计CLS: clsScore.toFixed(4),
+              影响元素: entry.sources
+            });
+          }
+        }
+      });
+      
+      observer.observe({ entryTypes: ['layout-shift'] });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>问题1: 长任务阻塞主线程</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    button { padding: 10px 20px; margin: 10px; font-size: 16px; }
+    .box { 
+      width: 100px; 
+      height: 100px; 
+      background: #3498db; 
+      margin: 20px 0;
+      position: relative;
+    }
+    .counter {
+      font-size: 48px;
+      font-weight: bold;
+      color: #3498db;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>问题1: 长任务阻塞主线程</h1>
+  <p>点击按钮后，注意计数器和方块会卡住不动</p>
+  
+  <button id="blockBtn">执行阻塞任务</button>
+  <button id="goodBtn">优化后的任务</button>
+  
+  <div class="counter" id="counter">0</div>
+  <div class="box" id="box"></div>
+  <div id="output"></div>
+
+  <script>
+    const output = document.getElementById('output');
+    const counter = document.getElementById('counter');
+    const box = document.getElementById('box');
+    
+    // 启动一个持续的动画（使用 requestAnimationFrame，依赖主线程）
+    let count = 0;
+    let position = 0;
+    let direction = 1;
+    
+    function animate() {
+      count++;
+      counter.textContent = count;
+      
+      // 移动方块（使用 left 属性，会触发 layout）
+      position += direction * 2;
+      if (position > 300 || position < 0) {
+        direction *= -1;
+      }
+      box.style.left = position + 'px';
+      
+      requestAnimationFrame(animate);
+    }
+    animate();
+
+    // 坏示例：长任务阻塞主线程
+    document.getElementById('blockBtn').addEventListener('click', function() {
+      output.innerHTML = '开始执行长任务...<br>';
+      const start = Date.now();
+      
+      // 同步执行大量计算，阻塞主线程
+      let result = 0;
+      for (let i = 0; i < 100000000; i++) {
+        result += Math.sqrt(i) * Math.sin(i) * Math.cos(i);
+      }
+      
+      const time = Date.now() - start;
+      output.innerHTML += `任务完成！耗时: ${time}ms<br>`;
+      output.innerHTML += `结果: ${result.toFixed(2)}<br>`;
+      output.innerHTML += '<span style="color: red;">注意：计数器和方块都卡住了！</span>';
+    });
+
+    // 好示例：分片执行
+    document.getElementById('goodBtn').addEventListener('click', function() {
+      output.innerHTML = '开始执行优化任务...<br>';
+      const start = Date.now();
+      let result = 0;
+      let i = 0;
+      const total = 10000000;
+      const chunkSize = 500000; // 每次处理500万
+
+      function processChunk() {
+        const end = Math.min(i + chunkSize, total);
+        for (; i < end; i++) {
+          result += Math.sqrt(i) * Math.sin(i) * Math.cos(i);
+        }
+
+        if (i < total) {
+          // 让出主线程，下一帧继续
+          setTimeout(processChunk, 0);
+        } else {
+          const time = Date.now() - start;
+          output.innerHTML += `任务完成！耗时: ${time}ms<br>`;
+          output.innerHTML += `结果: ${result.toFixed(2)}<br>`;
+          output.innerHTML += '<span style="color: green;">计数器和方块保持流畅！</span>';
+        }
+      }
+
+      processChunk();
+    });
+  </script>
+</body>
+</html>

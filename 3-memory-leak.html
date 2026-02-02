@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>问题4: 内存泄漏</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    button { padding: 10px 20px; margin: 10px; font-size: 16px; }
+    .widget { padding: 20px; margin: 10px; background: #9b59b6; color: white; }
+    #status { padding: 10px; background: #ecf0f1; margin: 10px 0; }
+  </style>
+</head>
+<body>
+  <h1>问题4: 内存泄漏</h1>
+  <p>使用 Memory 面板的 Heap Snapshot 观察内存变化</p>
+  
+  <div id="status">组件数量: 0</div>
+  
+  <button id="badBtn">坏方式：创建组件（有泄漏）</button>
+  <button id="goodBtn">好方式：创建组件（无泄漏）</button>
+  <button id="clearBtn">清空所有组件</button>
+  
+  <div id="container"></div>
+  <div id="output"></div>
+
+  <script>
+    const container = document.getElementById('container');
+    const status = document.getElementById('status');
+    const output = document.getElementById('output');
+    
+    let badComponents = [];
+    let goodComponents = [];
+
+    // 坏示例：清理不彻底导致内存泄漏
+    class BadComponent {
+      constructor(id) {
+        this.id = id;
+        this.data = new Array(10000).fill(`data-${id}`); // 占用内存
+        this.element = document.createElement('div');
+        this.element.className = 'widget';
+        this.element.textContent = `Bad Component ${id}`;
+        
+        // 事件监听器
+        this.handleClick = () => {
+          console.log('Clicked:', this.id, this.data.length);
+        };
+        this.element.addEventListener('click', this.handleClick);
+        
+        // 定时器持续增加数据
+        this.timer = setInterval(() => {
+          this.data.push(Math.random());
+        }, 1000);
+        
+        // 闭包引用
+        this.callback = () => {
+          console.log('Callback with data:', this.data.length);
+        };
+        window.addEventListener('resize', this.callback);
+      }
+      
+      // ❌ 不彻底的清理方法
+      destroy() {
+        // 只移除了DOM，其他都忘记清理了！
+        this.element.remove();
+        
+        // 忘记移除事件监听器 ❌
+        // 忘记清除定时器 ❌
+        // 忘记移除全局事件 ❌
+        // 忘记清空大数据 ❌
+      }
+    }
+
+    // 好示例：完整清理所有资源
+    class GoodComponent {
+      constructor(id) {
+        this.id = id;
+        this.data = new Array(10000).fill(`data-${id}`);
+        this.element = document.createElement('div');
+        this.element.className = 'widget';
+        this.element.textContent = `Good Component ${id}`;
+        
+        this.handleClick = () => {
+          console.log('Clicked:', this.id, this.data.length);
+        };
+        this.element.addEventListener('click', this.handleClick);
+        
+        this.timer = setInterval(() => {
+          this.data.push(Math.random());
+        }, 1000);
+        
+        this.callback = () => {
+          console.log('Callback with data:', this.data.length);
+        };
+        window.addEventListener('resize', this.callback);
+      }
+      
+      // ✅ 完整的清理方法
+      destroy() {
+        // 1. 移除事件监听器
+        this.element.removeEventListener('click', this.handleClick);
+        
+        // 2. 清除定时器
+        clearInterval(this.timer);
+        
+        // 3. 移除全局事件监听
+        window.removeEventListener('resize', this.callback);
+        
+        // 4. 清空大数据
+        this.data = null;
+        
+        // 5. 移除DOM
+        this.element.remove();
+        
+        // 6. 清空引用
+        this.handleClick = null;
+        this.callback = null;
+      }
+    }
+
+    document.getElementById('badBtn').addEventListener('click', function() {
+      for (let i = 0; i < 5; i++) {
+        const component = new BadComponent(badComponents.length + 1);
+        badComponents.push(component);
+        container.appendChild(component.element);
+      }
+      updateStatus();
+      output.innerHTML = '<span style="color: red;">创建了5个有内存泄漏的组件！<br>即使删除DOM，内存也不会释放。</span>';
+    });
+
+    document.getElementById('goodBtn').addEventListener('click', function() {
+      for (let i = 0; i < 5; i++) {
+        const component = new GoodComponent(goodComponents.length + 1);
+        goodComponents.push(component);
+        container.appendChild(component.element);
+      }
+      updateStatus();
+      output.innerHTML = '<span style="color: green;">创建了5个正确清理的组件！<br>删除时会释放所有资源。</span>';
+    });
+
+    document.getElementById('clearBtn').addEventListener('click', function() {
+      // 坏组件：调用了destroy但清理不彻底
+      badComponents.forEach(comp => {
+        comp.destroy(); // 看起来清理了，但实际上很多东西没清理
+      });
+      badComponents = [];
+      
+      // 好组件：完整清理
+      goodComponents.forEach(comp => {
+        comp.destroy(); // 真正的完整清理
+      });
+      goodComponents = [];
+      
+      updateStatus();
+      output.innerHTML = '<span style="color: orange;">已清空！<br>Bad组件虽然调用了destroy，但定时器、事件监听器、大数据都没清理，导致内存泄漏。<br>Good组件完整清理了所有资源。</span>';
+    });
+
+    function updateStatus() {
+      const total = badComponents.length + goodComponents.length;
+      status.textContent = `组件数量: ${total} (Bad: ${badComponents.length}, Good: ${goodComponents.length})`;
+    }
+  </script>
+</body>
+</html>
