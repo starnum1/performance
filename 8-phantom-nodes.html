@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>游离节点性能演示</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .container {
+            margin: 20px 0;
+        }
+        input {
+            display: block;
+            margin: 10px 0;
+            padding: 8px;
+            width: 300px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            transition: border-color 0.3s;
+        }
+        input:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+        .info {
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="info">
+        <h2>幽灵节点性能演示</h2>
+        <p>每隔100ms创建一个input并聚焦，共10个，最后全部删除</p>
+        <p id="status">准备开始...</p>
+    </div>
+    <div class="container">
+    </div>
+</body>
+<script>
+const container = document.querySelector('.container');
+const statusEl = document.getElementById('status');
+const inputs = [];
+
+let currentIndex = 0;
+
+// 每隔100ms创建一个input并聚焦
+const createInterval = setInterval(() => {
+    if (currentIndex < 10) {
+        const input = document.createElement('input');
+        input.placeholder = `Input ${currentIndex + 1}`;
+        input.value = `输入框 ${currentIndex + 1}`;
+        container.appendChild(input);
+        input.focus();
+        inputs.push(input);
+        
+        currentIndex++;
+        statusEl.textContent = `已创建并聚焦第 ${currentIndex} 个input...`;
+    } else {
+        clearInterval(createInterval);
+        statusEl.textContent = '所有input创建完成，准备删除...';
+        
+        // 创建完成后，延迟500ms删除所有input
+        setTimeout(() => {
+            inputs.forEach(input => {
+                if (input.parentNode === container) {
+                    input.blur();
+                    container.removeChild(input);
+                }
+            });
+            statusEl.textContent = '所有input已删除！';
+        }, 500);
+    }
+}, 100);
+</script>
+</html>
